@@ -1,4 +1,4 @@
-from scapy.all import Dot11,Dot11Beacon,Dot11Elt,RadioTap,sendp,hexdump,RandMAC
+from scapy.all import *
 import sys
 import random
 import os
@@ -11,15 +11,21 @@ def usage():
 
 
 def ssid_list():
-    f = open(sys.argv[2],'r')
-    ssid = []
-    while True:
-        line = f.readline()
-        if not line: 
-            break
-        ssid.append(line)
-    f.close()
-    return ssid
+    with open(sys.argv[2],'r') as f:
+        ssids = f.readlines()
+    ssids = [line.strip() for line in ssids]
+    return ssids
+
+# def ssid_list():
+#     f = open(sys.argv[2],'r')
+#     ssid = []
+#     while True:
+#         line = f.readline()
+#         if not line: 
+#             break
+#         ssid.append(line)
+#     f.close()
+#     return ssid
 
     
 def make_frame(ssids):
@@ -30,11 +36,13 @@ def make_frame(ssids):
         sender = faker.mac_address()
         dot11 = Dot11(type=0, subtype=8, addr1='ff:ff:ff:ff:ff:ff',addr2=sender, addr3=sender)
         beacon = Dot11Beacon(cap='ESS+privacy')
-        essid = Dot11Elt(ID='SSID',info=netSSID, len=len(netSSID))
+        netSSID_encoding = netSSID.encode('utf-8')
+        essid = Dot11Elt(ID='SSID',info=netSSID_encoding, len=len(netSSID_encoding))
+        #essid = Dot11Elt(ID='SSID',info=netSSID, len=len(netSSID))
         frame = RadioTap()/dot11/beacon/essid
         frames.append(frame)
         print("---------------------------------------------------------------------------------------")
-        print("SSID="+netSSID[:-1]+" :",end=' ')
+        print("SSID="+netSSID+" :",end=' ')
         print("add1="+frame.addr1,end=' | ')
         print("add2="+frame.addr2,end=' | ')
         print("add3="+frame.addr3)
